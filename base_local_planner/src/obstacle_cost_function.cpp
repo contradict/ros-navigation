@@ -113,42 +113,43 @@ double ObstacleCostFunction::footprintCost (
     std::vector<geometry_msgs::Point>& footprint_spec,
     costmap_2d::Costmap2D* costmap,
     base_local_planner::WorldModel* world_model) {
-  double cos_th = cos(th);
-  double sin_th = sin(th);
-
-  double occ_cost = 0.0;
-
-  std::vector<geometry_msgs::Point> scaled_oriented_footprint;
-  for(unsigned int i  = 0; i < footprint_spec.size(); ++i) {
-    geometry_msgs::Point new_pt;
-    new_pt.x = x + (scale * footprint_spec[i].x * cos_th - scale * footprint_spec[i].y * sin_th);
-    new_pt.y = y + (scale * footprint_spec[i].x * sin_th + scale * footprint_spec[i].y * cos_th);
-    scaled_oriented_footprint.push_back(new_pt);
     geometry_msgs::Point robot_position;
+    double cos_th = cos(th);
+    double sin_th = sin(th);
+
+    double occ_cost = 0.0;
+
     robot_position.x = x;
     robot_position.y = y;
 
+    std::vector<geometry_msgs::Point> scaled_oriented_footprint;
+    for(unsigned int i  = 0; i < footprint_spec.size(); ++i) {
+        geometry_msgs::Point new_pt;
+        new_pt.x = x + (scale * footprint_spec[i].x * cos_th - scale * footprint_spec[i].y * sin_th);
+        new_pt.y = y + (scale * footprint_spec[i].x * sin_th + scale * footprint_spec[i].y * cos_th);
+        scaled_oriented_footprint.push_back(new_pt);
+
+        unsigned int cell_x, cell_y;
+        //we won't allow trajectories that go off the map... shouldn't happen that often anyways
+        if ( ! costmap->worldToMap(x, y, cell_x, cell_y)) {
+            return -7.0;
+        }
+        occ_cost = std::max(occ_cost, double(costmap->getCost(cell_x, cell_y)));
+    }
+
     //check if the footprint is legal
     double footprint_cost = world_model->footprintCost(robot_position,
-    		scaled_oriented_footprint,
-    		costmap->getInscribedRadius(),
-    		costmap->getCircumscribedRadius());
+            scaled_oriented_footprint,
+            costmap->getInscribedRadius(),
+            costmap->getCircumscribedRadius());
 
     if (footprint_cost < 0) {
-      return -6.0;
-    }
-    unsigned int cell_x, cell_y;
-
-    //we won't allow trajectories that go off the map... shouldn't happen that often anyways
-    if ( ! costmap->worldToMap(x, y, cell_x, cell_y)) {
-      return -7.0;
+        return -6.0;
     }
 
-    occ_cost = std::max(std::max(occ_cost, footprint_cost), double(costmap->getCost(cell_x, cell_y)));
+    occ_cost = std::max(occ_cost, footprint_cost);
 
-  }
-
-  return occ_cost;
+    return occ_cost;
 }
 
 } /* namespace base_local_planner */
