@@ -105,7 +105,7 @@ private:
 
   ros::NodeHandle node_;
   ros::Timer timer_;
-  ros::Publisher pose_pub_;
+  ros::Publisher odom_pub_, pose_pub_;
   ros::Subscriber odom_sub_, imu_sub_, vo_sub_,gps_sub_;
   ros::ServiceServer state_srv_;
 
@@ -114,10 +114,12 @@ private:
 
   // estimated robot pose message to send
   geometry_msgs::PoseWithCovarianceStamped  pose_output_;
+  nav_msgs::Odometry  odom_output_;
 
   // robot state
   tf::TransformListener    robot_state_;
   tf::TransformBroadcaster odom_broadcaster_;
+  geometry_msgs::TwistWithCovariance odom_twist_;
 
   // vectors
   tf::Transform odom_meas_, imu_meas_, vo_meas_, gps_meas_;
@@ -134,7 +136,7 @@ private:
   MatrixWrapper::SymmetricMatrix odom_covariance_, imu_covariance_, vo_covariance_, gps_covariance_;
   bool debug_, self_diagnose_;
   std::string output_frame_, base_footprint_frame_, tf_prefix_;
-  std::string pose_pub_topic_;
+  std::string odom_pub_topic_, pose_pub_topic_;
 
   // log files for debugging
   std::ofstream odom_file_, imu_file_, vo_file_, gps_file_, corr_file_, time_file_, extra_file_;

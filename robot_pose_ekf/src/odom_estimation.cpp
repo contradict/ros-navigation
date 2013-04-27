@@ -397,6 +397,28 @@ namespace estimation
 	estimate.pose.covariance[6*i+j] = covar(i+1,j+1);
   };
 
+  void OdomEstimation::getEstimate(nav_msgs::Odometry& estimate)
+  {
+    // pose
+    StampedTransform tmp;
+    if (!transformer_.canTransform("odom_combined", "base_footprint", ros::Time())){
+      ROS_ERROR("Cannot get transform at time %f", 0.0);
+      return;
+    }
+    transformer_.lookupTransform("odom_combined", "base_footprint", ros::Time(), tmp);
+    poseTFToMsg(tmp, estimate.pose.pose);
+
+    // header
+    estimate.header.stamp = tmp.stamp_;
+    estimate.header.frame_id = "odom_combined";
+
+    // covariance
+    SymmetricMatrix covar =  filter_->PostGet()->CovarianceGet();
+    for (unsigned int i=0; i<6; i++)
+      for (unsigned int j=0; j<6; j++)
+	estimate.pose.covariance[6*i+j] = covar(i+1,j+1);
+  }
+
   // correct for angle overflow
   void OdomEstimation::angleOverflowCorrect(double& a, double ref)
   {

@@ -51,6 +51,7 @@
 
 // msgs
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <nav_msgs/Odometry.h>
 
 // log files
 #include <fstream>
@@ -110,6 +111,12 @@ public:
    * \param estimate the filter posterior as a pose with covariance
    */
   void getEstimate(geometry_msgs::PoseWithCovarianceStamped& estimate);
+
+  /** get the filter posterior
+   * \param estimate the filter posterior as a odometry message
+   */
+  void getEstimate(nav_msgs::Odometry& estimate);
+
 
   /** Add a sensor measurement to the measurement buffer
    * \param meas the measurement to add

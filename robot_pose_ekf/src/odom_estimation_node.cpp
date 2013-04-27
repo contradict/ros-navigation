@@ -75,6 +75,7 @@ namespace estimation
 
     // paramters
     nh_private.param("output_frame", output_frame_, std::string("odom_combined"));
+    nh_private.param("odom_pub_topic_", odom_pub_topic_, std::string("odom_combined"));
     nh_private.param("pose_pub_topic_", pose_pub_topic_, std::string("pose_combined"));
     nh_private.param("sensor_timeout", timeout_, 1.0);
     nh_private.param("odom_used", odom_used_, true);
@@ -94,6 +95,7 @@ namespace estimation
 
     // advertise our estimation
     pose_pub_ = nh_private.advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_pub_topic_, 10);
+    odom_pub_ = nh_private.advertise<nav_msgs::Odometry>(odom_pub_topic_, 10);
 
     // initialize
     filter_stamp_ = Time::now();
@@ -178,6 +180,7 @@ namespace estimation
     for (unsigned int i=0; i<6; i++)
       for (unsigned int j=0; j<6; j++)
         odom_covariance_(i+1, j+1) = odom->pose.covariance[6*i+j];
+    odom_twist_ = odom->twist;
 
     my_filter_.addMeasurement(StampedTransform(odom_meas_.inverse(), odom_stamp_, "base_footprint", "wheelodom"), odom_covariance_);
     
@@ -416,6 +419,10 @@ namespace estimation
           // output most recent estimate and relative covariance
           my_filter_.getEstimate(pose_output_);
           pose_pub_.publish(pose_output_);
+          my_filter_.getEstimate(odom_output_);
+          // twist
+          odom_output_.twist = odom_twist_;
+          odom_pub_.publish(odom_output_);
           ekf_sent_counter_++;
           
           // broadcast most recent estimate to TransformArray
