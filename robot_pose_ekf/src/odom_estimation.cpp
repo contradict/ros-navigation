@@ -388,7 +388,7 @@ namespace estimation
 
     // header
     estimate.header.stamp = tmp.stamp_;
-    estimate.header.frame_id = "odom";
+    estimate.header.frame_id = "odom_combined";
 
     // covariance
     SymmetricMatrix covar =  filter_->PostGet()->CovarianceGet();

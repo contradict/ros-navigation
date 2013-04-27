@@ -113,7 +113,7 @@ private:
   OdomEstimation my_filter_;
 
   // estimated robot pose message to send
-  geometry_msgs::PoseWithCovarianceStamped  output_; 
+  geometry_msgs::PoseWithCovarianceStamped  pose_output_;
 
   // robot state
   tf::TransformListener    robot_state_;
@@ -134,6 +134,7 @@ private:
   MatrixWrapper::SymmetricMatrix odom_covariance_, imu_covariance_, vo_covariance_, gps_covariance_;
   bool debug_, self_diagnose_;
   std::string output_frame_, base_footprint_frame_, tf_prefix_;
+  std::string pose_pub_topic_;
 
   // log files for debugging
   std::ofstream odom_file_, imu_file_, vo_file_, gps_file_, corr_file_, time_file_, extra_file_;

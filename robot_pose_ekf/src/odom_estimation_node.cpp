@@ -75,6 +75,7 @@ namespace estimation
 
     // paramters
     nh_private.param("output_frame", output_frame_, std::string("odom_combined"));
+    nh_private.param("pose_pub_topic_", pose_pub_topic_, std::string("pose_combined"));
     nh_private.param("sensor_timeout", timeout_, 1.0);
     nh_private.param("odom_used", odom_used_, true);
     nh_private.param("imu_used",  imu_used_, true);
@@ -92,7 +93,7 @@ namespace estimation
     timer_ = nh_private.createTimer(ros::Duration(1.0/max(freq,1.0)), &OdomEstimationNode::spin, this);
 
     // advertise our estimation
-    pose_pub_ = nh_private.advertise<geometry_msgs::PoseWithCovarianceStamped>(output_frame_, 10);
+    pose_pub_ = nh_private.advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_pub_topic_, 10);
 
     // initialize
     filter_stamp_ = Time::now();
@@ -413,8 +414,8 @@ namespace estimation
         if (my_filter_.update(odom_active_, imu_active_,gps_active_, vo_active_,  filter_stamp_, diagnostics)){
           
           // output most recent estimate and relative covariance
-          my_filter_.getEstimate(output_);
-          pose_pub_.publish(output_);
+          my_filter_.getEstimate(pose_output_);
+          pose_pub_.publish(pose_output_);
           ekf_sent_counter_++;
           
           // broadcast most recent estimate to TransformArray
