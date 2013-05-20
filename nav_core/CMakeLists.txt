@@ -19,4 +19,8 @@ catkin_package(
             costmap_2d
 )
 
+install(DIRECTORY include
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+    USE_SOURCE_PERMISSIONS
+)
 
