@@ -152,7 +152,7 @@ namespace costmap_2d {
        * @param w_size_y The y size of the window in meters
        * @param clear_no_info If set to true, NO_INFORMATION will be cleared, if set to false NO_INFORMATION will be treated as a lethal obstacle
        */
-      virtual void clearNonLethal(double wx, double wy, double w_size_x, double w_size_y, bool clear_no_info = false);
+      virtual void clearNonLethal(double wx, double wy, double w_size_x, double w_size_y, bool clear_no_info = true);
 
       /**
        * @brief  Update the costmap with new observations
