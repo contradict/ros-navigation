@@ -508,6 +508,27 @@ namespace move_base {
     return true;
   }
 
+  bool MoveBase::makePlanFromPose(const geometry_msgs::PoseStamped& goal, const geometry_msgs::PoseStamped& source, std::vector<geometry_msgs::PoseStamped>& plan){
+    boost::unique_lock< boost::shared_mutex > lock(*(planner_costmap_ros_->getCostmap()->getLock()));
+
+    //make sure to set the plan to be empty initially
+    plan.clear();
+
+    //since this gets called on handle activate
+    if(planner_costmap_ros_ == NULL) {
+      ROS_ERROR("Planner costmap ROS is NULL, unable to create global plan");
+      return false;
+    }
+
+    //if the planner fails or returns a zero length plan, planning failed
+    if(!planner_->makePlan(source, goal, plan) || plan.empty()){
+      ROS_DEBUG_NAMED("move_base","Failed to find a  plan to point (%.2f, %.2f)", goal.pose.position.x, goal.pose.position.y);
+      return false;
+    }
+
+    return true;
+  }
+
   void MoveBase::publishZeroVelocity(){
     geometry_msgs::Twist cmd_vel;
     cmd_vel.linear.x = 0.0;
@@ -595,10 +616,16 @@ namespace move_base {
       lock.unlock();
       ROS_DEBUG_NAMED("move_base_plan_thread","Planning...");
 
-      //run planner
-      planner_plan_->clear();
-      bool gotPlan = n.ok() && makePlan(temp_goal, *planner_plan_);
-
+      bool gotPlan = false;
+      if(plan_from_pose_) {
+        planner_plan_->clear();
+        gotPlan = n.ok() && makePlanFromPose(temp_goal, start_pose_, *planner_plan_);
+        plan_from_pose_ = false;
+      } else {
+        //run planner
+        planner_plan_->clear();
+        gotPlan = n.ok() && makePlan(temp_goal, *planner_plan_);
+      }
       if(gotPlan){
         ROS_DEBUG_NAMED("move_base_plan_thread","Got Plan with %zu points!", planner_plan_->size());
         //pointer swap the plans under mutex (the controller will pull from latest_plan_)
@@ -900,7 +927,8 @@ namespace move_base {
         
         {
          boost::unique_lock< boost::shared_mutex > lock(*(controller_costmap_ros_->getCostmap()->getLock()));
-        
+       
+        geometry_msgs::PoseStamped pose; 
         if(tc_->computeVelocityCommands(cmd_vel)){
           ROS_DEBUG_NAMED( "move_base", "Got a valid command from the local planner: %.3lf, %.3lf, %.3lf",
                            cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z );
@@ -909,6 +937,16 @@ namespace move_base {
           vel_pub_.publish(cmd_vel);
           if(recovery_trigger_ == CONTROLLING_R)
             recovery_index_ = 0;
+        }
+        else if(tc_->requestNewPlanFrom(&start_pose_)) {
+            state_ = PLANNING;
+            plan_from_pose_ = true;
+
+            //enable the planner thread in case it isn't running on a clock
+            boost::unique_lock<boost::mutex> lock(planner_mutex_);
+            runPlanner_ = true;
+            planner_cond_.notify_one();
+            lock.unlock();
         }
         else {
           ROS_DEBUG_NAMED("move_base", "The local planner could not find a valid plan.");

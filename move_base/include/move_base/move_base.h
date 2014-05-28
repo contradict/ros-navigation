@@ -128,6 +128,15 @@ namespace move_base {
       bool makePlan(const geometry_msgs::PoseStamped& goal, std::vector<geometry_msgs::PoseStamped>& plan);
 
       /**
+       * @brief  Make a new global plan from the source pose to the goal
+       * @param  goal The goal to plan to
+       * @param  source The source pose to plan from
+       * @param  plan Will be filled in with the plan made by the planner
+       * @return  True if planning succeeds, false otherwise
+       */
+      bool makePlanFromPose(const geometry_msgs::PoseStamped& goal, const geometry_msgs::PoseStamped& source, std::vector<geometry_msgs::PoseStamped>& plan);
+
+      /**
        * @brief  Load the recovery behaviors for the navigation stack from the parameter server
        * @param node The ros::NodeHandle to be used for loading parameters 
        * @return True if the recovery behaviors were loaded successfully, false otherwise
@@ -210,6 +219,7 @@ namespace move_base {
       boost::mutex planner_mutex_;
       boost::condition_variable planner_cond_;
       geometry_msgs::PoseStamped planner_goal_;
+      geometry_msgs::PoseStamped start_pose_;
       boost::thread* planner_thread_;
 
 
@@ -222,6 +232,7 @@ namespace move_base {
       move_base::MoveBaseConfig default_config_;
       bool setup_, p_freq_change_, c_freq_change_;
       bool new_global_plan_;
+      bool plan_from_pose_;
   };
 };
 #endif

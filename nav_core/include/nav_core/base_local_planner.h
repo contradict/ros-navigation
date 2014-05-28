@@ -63,6 +63,12 @@ namespace nav_core {
       virtual bool isGoalReached() = 0;
 
       /**
+       * @brief  Asks if a new plan should be made from some sourcePose to the current goal
+       * @return True if a new plan starting from the source pose should be made, false otherwise
+       */
+      virtual bool requestNewPlanFrom(geometry_msgs::PoseStamped* sourcePose) { return false; }
+
+      /**
        * @brief  Set the plan that the local planner is following
        * @param orig_global_plan The plan to pass to the local planner
        * @return True if the plan was updated successfully, false otherwise
