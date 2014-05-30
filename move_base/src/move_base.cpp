@@ -939,16 +939,6 @@ namespace move_base {
           if(recovery_trigger_ == CONTROLLING_R)
             recovery_index_ = 0;
         }
-        else if(tc_->requestNewPlanFrom(&start_pose_)) {
-            state_ = PLANNING;
-            plan_from_pose_ = true;
-
-            //enable the planner thread in case it isn't running on a clock
-            boost::unique_lock<boost::mutex> lock(planner_mutex_);
-            runPlanner_ = true;
-            planner_cond_.notify_one();
-            lock.unlock();
-        }
         else {
           ROS_DEBUG_NAMED("move_base", "The local planner could not find a valid plan.");
           ros::Time attempt_end = last_valid_control_ + ros::Duration(controller_patience_);
@@ -972,6 +962,16 @@ namespace move_base {
             planner_cond_.notify_one();
             lock.unlock();
           }
+        }
+        if(tc_->requestNewPlanFrom(&start_pose_)) {
+            state_ = PLANNING;
+            plan_from_pose_ = true;
+
+            //enable the planner thread in case it isn't running on a clock
+            boost::unique_lock<boost::mutex> lock(planner_mutex_);
+            runPlanner_ = true;
+            planner_cond_.notify_one();
+            lock.unlock();
         }
         }
 
