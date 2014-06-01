@@ -964,7 +964,8 @@ namespace move_base {
           }
         }
         if(tc_->requestNewPlanFrom(&start_pose_)) {
-            state_ = PLANNING;
+            // leave the state in controlling so we don't plan twice in a row.
+            //state_ = PLANNING;
             plan_from_pose_ = true;
 
             //enable the planner thread in case it isn't running on a clock
