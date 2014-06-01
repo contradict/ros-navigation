@@ -35,8 +35,9 @@ int main(int argc, char** argv){
 
   move_base::MoveBase move_base( tf );
 
-  //ros::MultiThreadedSpinner s;
-  ros::spin();
+  ros::MultiThreadedSpinner s(2);
+  s.spin();
+  //ros::spin();
 
   return(0);
 }
