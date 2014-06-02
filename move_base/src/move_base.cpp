@@ -870,16 +870,26 @@ namespace move_base {
 
       if(!tc_->setPlan(*controller_plan_)){
         //ABORT and SHUTDOWN COSTMAPS
-        ROS_ERROR("Failed to pass global plan to the controller, aborting.");
-        resetState();
+        //ROS_ERROR("Failed to pass global plan to the controller, aborting.");
+        //resetState();
 
         //disable the planner thread
-        lock.lock();
-        runPlanner_ = false;
-        lock.unlock();
+        //lock.lock();
+        //runPlanner_ = false;
+        //lock.unlock();
 
-        as_->setAborted(move_base_msgs::MoveBaseResult(), "Failed to pass global plan to the controller.");
-        return true;
+        //as_->setAborted(move_base_msgs::MoveBaseResult(), "Failed to pass global plan to the controller.");
+        //return true;
+        ROS_ERROR("New goal not accepted by base local planner.  Will retry...");
+        new_global_plan_ = true;
+
+        //do a pointer swap under mutex... AGAIN! (To undo the first time)
+        std::vector<geometry_msgs::PoseStamped>* temp_plan = controller_plan_;
+
+        boost::unique_lock<boost::mutex> lock(planner_mutex_);
+        controller_plan_ = latest_plan_;
+        latest_plan_ = temp_plan;
+        lock.unlock();
       }
 
       //make sure to reset recovery_index_ since we were able to find a valid plan
